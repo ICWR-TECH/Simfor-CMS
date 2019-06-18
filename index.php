@@ -2,35 +2,39 @@
 // Simfor ( Simple Forum CMS )
 // Copyright (c)2019 - Afrizal F.A - ICWR-TECH
 include("conf.php");
+ob_start();
 session_start();
 if($_GET['logout'] == "true") {
     session_destroy();
     header("location:index.php");
     exit;
 }
+// Filter
+$cat_id=mysqli_real_escape_string($konek, $_GET[cat_id]);
+$filter_user=mysqli_real_escape_string($konek, $_GET[user]);
+$filter_code=mysqli_real_escape_string($konek, $_GET[code]);
+$filter_view=mysqli_real_escape_string($konek, $_GET[view]);
+$get_user=mysqli_real_escape_string($konek, $_GET[user]);
+$username=mysqli_real_escape_string($konek, $_POST['username']);
+$email=mysqli_real_escape_string($konek, $_POST['email']);
 ?>
 <html>
 <!-- Theme & CMS By ICWR-TECH -->
 <head>
-    <title>X-Byte Forum</title>
+    <title><!-- sub --></title>
+<?php
+$retitle="$judul";
+?>
     <meta name="description" content="Hacking Forum">
-    <xlink href="https://fonts.googleapis.com/css?family=News%20Cycle" rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css?family=News%20Cycle" rel='stylesheet'>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <?php
-if($_SESSION['aktif'] == "non") {
-?>
-Your Account Not Actived, <a href="?logout=true">Logout</a>
-<?php
-exit;
-}
-?>
-<?php
 if($_GET['page'] == "activation") {
-$query_aktif_akun="SELECT * FROM pengguna WHERE username='$_GET[user]' AND status='$_GET[code]'";
+$query_aktif_akun="SELECT * FROM pengguna WHERE username='$filter_user' AND status='$filter_code'";
 if(mysqli_query($konek, $query_aktif_akun)) {
-    $query_ganti_status_akun="UPDATE pengguna SET status='aktif' WHERE username='$_GET[user]'";
+    $query_ganti_status_akun="UPDATE pengguna SET status='aktif' WHERE username='$filter_user'";
     if(mysqli_query($konek, $query_ganti_status_akun)) {
         echo "Your Account Is Actived <a href='?'>Click For Login</a>";
     }
@@ -66,6 +70,16 @@ if($_SESSION['login'] == "logged") {
     <div class="tengah">
         <div class="kiri">
 <?php
+if($_SESSION['login'] == "logged") {
+if($_SESSION['aktif'] == "non") {
+?>
+Your Account Not Actived, <a href="?logout=true">Logout</a>
+<?php
+exit;
+}
+}
+?>
+<?php
 if(!$_GET){
 ?>
             <table width="100%">
@@ -90,7 +104,8 @@ while($data_kategori = mysqli_fetch_assoc($query_kategori)) {
 ?>
 <?php
 if($_GET['page'] == "topic") {
-$get_kategori=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM kategori WHERE id='$_GET[cat_id]'"));
+$get_kategori=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM kategori WHERE id='$cat_id'"));
+$retitle="$judul | Topic For, $get_kategori[judul]";
 if(!$_GET['view'] && !$_GET['new']) {
 ?>
 <?php
@@ -108,7 +123,15 @@ if($_SESSION['login'] == "logged") {
                     <td class="judul-konten">Date</td>
                 </tr>
 <?php
-$topik_query=mysqli_query($konek, "SELECT * FROM topik WHERE id_kategori='$_GET[cat_id]' ORDER BY id DESC");
+$hal_pagging="10";
+$paging=isset($_GET['pg'])?(int)$_GET["pg"]:1;
+$mulai_page=($paging>1)?($paging * $hal_pagging)-$hal_pagging:0;
+$topik_query=mysqli_query($konek, "SELECT * FROM topik WHERE id_kategori='$cat_id' ORDER BY id DESC LIMIT $mulai_page, $hal_pagging");
+$cek_total_topik=mysqli_query($konek, "SELECT * FROM topik");
+$total_row=mysqli_num_rows($cek_total_topik);
+$pages_paging=ceil($total_row/$hal_pagging);
+?>
+<?php
 while($data_topik = mysqli_fetch_assoc($topik_query)) {
 ?>
                 <tr>
@@ -119,6 +142,13 @@ while($data_topik = mysqli_fetch_assoc($topik_query)) {
 }
 ?>
             </table>
+<?php
+for ($i_h=1;$i_h<=$pages_paging;$i_h++) {
+?>
+            <a href="?page=topic&cat_id=<?php echo $_GET['cat_id']; ?>&view=<?php echo $_GET['view']; ?>&pg=<?php echo $i_h; ?>"><?php echo $i_h; ?></a>
+<?php
+}
+?>
 <?php
 }
 ?>
@@ -140,12 +170,15 @@ if($_SESSION['login'] == "logged") {
                 </form>
 <?php
 if($_POST['tambah_topik']) {
-    $detail=str_replace("\n", "<br>", $_POST['detail']);
-    $query_tambah_topic=mysqli_query($konek, "INSERT INTO topik(judul, detail, id_kategori, tgl, username) VALUES('$_POST[judul]', '$detail', '$_GET[cat_id]', '$tgl_waktu', '$_SESSION[username]')");
-    if($query_tambah_topic) {
+    $detail=mysqli_real_escape_string($konek, str_replace("\n", "<br>", $_POST['detail']));
+    $judul_topik=mysqli_real_escape_string($konek, $_POST['judul']);
+    if(!empty($_POST['judul']) && !empty($detail)) {
+        $query_tambah_topic=mysqli_query($konek, "INSERT INTO topik(judul, detail, id_kategori, tgl, username) VALUES('$judul_topik', '$detail', '$cat_id', '$tgl_waktu', '$_SESSION[username]')");
+        if($query_tambah_topic) {
 ?>
                 <br>Topic Added !!<br>
 <?php
+        }
     }
 }
 ?>
@@ -162,8 +195,8 @@ if($_POST['tambah_topik']) {
 ?>
 <?php
 if($_GET['view']) {
-if($_SESSION['login'] == "logged") {
-$get_topik=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM topik WHERE id='$_GET[view]'"));
+$get_topik=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM topik WHERE id='$filter_view'"));
+$retitle="$judul | $get_topik[judul]";
 ?>
             <div class="topik">
                 <a href="?page=topic&cat_id=<?php echo $get_topik['id_kategori']; ?>&view=<?php echo $get_topik['id']; ?>"><font size="20"><?php echo $get_topik['judul']; ?></font></a>
@@ -173,18 +206,35 @@ $get_topik=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM topik WHERE id
                 <?php echo $get_topik['detail']; ?>
                 <br><br>
             </div>
+<?php
+if($_SESSION['login'] == "logged") {
+?>
             <div class="komentar">
                 <font size="5">Reply</font>
                 <hr>
 <?php
-$query_reply=mysqli_query($konek, "SELECT * FROM reply WHERE id_topik='$_GET[view]' ORDER BY id DESC");
+$reply_pagging="5";
+$paging_reply=isset($_GET['pg_r'])?(int)$_GET["pg_r"]:1;
+$mulai_reply=($paging_reply>1)?($paging_reply * $reply_pagging)-$reply_pagging:0;
+$query_reply=mysqli_query($konek, "SELECT * FROM reply WHERE id_topik='$filter_view' ORDER BY id DESC LIMIT $mulai_reply, $reply_pagging");
+$cek_total_reply=mysqli_query($konek, "SELECT * FROM reply WHERE id_topik='$filter_view'");
+$total_row_reply=mysqli_num_rows($cek_total_reply);
+$pages_paging=ceil($total_row_reply/$reply_pagging);
 while($data_reply = mysqli_fetch_assoc($query_reply)) {
+    $get_foto=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM pengguna WHERE username='$data_reply[username]'"));
 ?>
-                <img height="30" width="30" src="<?php echo $data_reply['foto']; ?>"/> <a href="?page=profile&user=<?php echo $data_reply['username']; ?>"><?php echo $data_reply['username']; ?></a> ( <?php echo $data_reply['tgl']; ?> )
+                <img class="foto" src="<?php echo $get_foto['foto']; ?>"/> <a href="?page=profile&user=<?php echo $data_reply['username']; ?>"><?php echo $data_reply['username']; ?></a> ( <?php echo $data_reply['tgl']; ?> )
                 <br><br>
                 <?php echo $data_reply['reply']; ?>
                 <br>
                 <hr>
+<?php
+}
+?>
+<?php
+for ($i_r=1;$i_r<=$pages_paging;$i_r++) {
+?>
+                <a href="<?php echo $_SERVER['REQUEST_URI']; ?>&pg_r=<?php echo $i_r; ?>"><?php echo $i_r; ?></a>
 <?php
 }
 ?>
@@ -197,8 +247,8 @@ while($data_reply = mysqli_fetch_assoc($query_reply)) {
                 </form>
 <?php
 if($_POST["komentar"]) {
-    $reply_post=str_replace("\n", "<br>", $_POST['reply']);
-    $query_kirim_reply=mysqli_query($konek, "INSERT INTO reply(username, reply, tgl, id_topik) VALUES('$_SESSION[username]', '$reply_post', '$tgl_waktu', '$_GET[view]')");
+    $reply_post=mysqli_real_escape_string($konek, str_replace("\n", "<br>", $_POST['reply']));
+    $query_kirim_reply=mysqli_query($konek, "INSERT INTO reply(username, reply, tgl, id_topik) VALUES('$_SESSION[username]', '$reply_post', '$tgl_waktu', '$filter_view')");
     if($query_kirim_reply) {
 ?>
                     <br>Reply Sended !!<br>
@@ -227,9 +277,10 @@ if($_GET['view']) {
 ?>
 <?php
 if($_GET['page'] == "profile") {
+$retitle="$judul | Profile, $_GET[user]";
 ?>
 <?php
-$get_pengguna=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM pengguna WHERE username='$_GET[user]'"));
+$get_pengguna=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM pengguna WHERE username='$filter_user'"));
 ?>
             <div class="profil">
                 <a href="?page=profile&user=<?php echo $get_pengguna['username']; ?>"><font size="20"><?php echo $get_pengguna['username']; ?></font></a>
@@ -238,17 +289,79 @@ $get_pengguna=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM pengguna WH
                 <br><br>
                 Email : <?php echo $get_pengguna['email']; ?>
                 <br><br>
-                <a href="?page=chat&user=<?php echo $_GET[user]; ?>">Chat User</a>
+<?php
+if($_GET['user'] == $_SESSION['username']) {
+?>
+                [ <a href="?page=edit-profile&user=<?php echo $_GET[user]; ?>">Edit Profile</a> ]
+<?php
+} else {
+?>
+                [ <a href="?page=chat&user=<?php echo $_GET[user]; ?>">Chat User</a> ]
+<?php
+}
+?>
+            </div>
+<?php
+}
+?>
+<?php
+if($_GET['page'] == "edit-profile" && $_GET['user'] == $_SESSION['username']) {
+$get_foto_user=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM pengguna WHERE username='$filter_user'"));
+?>
+            <div class="profil">
+                <h1>Edit Profile, <?php echo $get_foto_user['username']; ?></h1>
+                <img width="200" src="<?php echo $get_foto_user['foto']; ?>"/>
+                <br><br>
+                <form enctype="multipart/form-data" method="post">
+                    Photo : <input type="file" name="foto" onchange="javascript:this.form.submit();">
+                </form>
+<?php
+if($_FILES['foto']) {
+if(empty($_FILES['foto'])) {
+$foto_edit="$site/default.jpg";
+} else {
+$cek_foto=scandir("img_user");
+if(preg_match("/".md5($_FILES['foto']['name']).".jpg"."/", $cek_foto)) {
+$foto_edit="img_user/".md5(rand(10000000000, 99999999999).$_FILES['foto']['name']).".jpg";
+copy($_FILES['foto']['tmp_name'], $foto_edit);
+} else {
+$foto_edit="img_user/".md5($_FILES['foto']['name']).".jpg";
+copy($_FILES['foto']['tmp_name'], $foto_edit);
+}
+}
+$edit_profile_query=mysqli_query($konek, "UPDATE pengguna SET foto='$foto_edit' WHERE username='$_SESSION[username]'");
+}
+?>
+                <form enctype="multipart/form-data" method="post">
+                    Old Password : <input type="password" name="oldpass">
+                    <br><br>
+                    New Password : <input type="password" name="newpass">
+                    <br><br>
+                    <input type="Submit" name="cpass" value="Change Password">
+                </form>
+                <br>
+<?php
+if($_POST['cpass']) {
+    $passmd=md5($_POST['newpass']);
+    if(mysqli_query($konek, "UPDATE pengguna SET password='$passmd' WHERE username='$_SESSION[username]'")) {
+        echo "Password Changed";
+    } else {
+        echo "Password Not Changed";
+    }
+}
+?>
             </div>
 <?php
 }
 ?>
 <?php
 if($_GET['page'] == "chat") {
+if($_SESSION['login'] == "logged") {
 ?>
             <div class="chat">
 <?php
 if(!$_GET['user']) {
+$retitle="$judul | Chatting";
 ?>
                 <font size="5">Chatting</font>
 <br>
@@ -266,6 +379,7 @@ while($data_chat = mysqli_fetch_array($query_chat)) {
 ?>
 <?php
 if($_GET['user']) {
+$retitle="$judul | Chat From, $_GET[user]";
 ?>
                 <font size="5">Chat From, <?php echo $_GET['user']; ?></font>
                 <hr>
@@ -274,16 +388,18 @@ $query_direct_chat=mysqli_query($konek, "SELECT * FROM pesan WHERE to_user='$_SE
 while($data_direct_chat = mysqli_fetch_array($query_direct_chat)) {
 ?>
 <?php
-if($data_direct_chat['from_user'] == $_SESSION['username']) {
-if($_GET['user'] == $_SESSION['username']) {
-?>
-                <a href="?page=profile&user=<?php echo $data_direct_chat['to_user']; ?>"><b><?php echo $data_direct_chat['to_user']; ?></b></a> : <?php echo $data_direct_chat['pesan']; ?><hr>
-<?php
-}
-}
+if($data_direct_chat['from_user'] == $_GET['user'] and $data_direct_chat['to_user'] == $_SESSION['username']) {
 ?>
                 <a href="?page=profile&user=<?php echo $data_direct_chat['from_user']; ?>"><b><?php echo $data_direct_chat['from_user']; ?></b></a> : <?php echo $data_direct_chat['pesan']; ?><hr>
 <?php
+}
+?>
+<?php
+if($data_direct_chat['to_user'] == $_GET['user'] and $data_direct_chat['from_user'] == $_SESSION['username']) {
+?>
+                <a href="?page=profile&user=<?php echo $data_direct_chat['from_user']; ?>"><b><?php echo $data_direct_chat['from_user']; ?></b></a> : <?php echo $data_direct_chat['pesan']; ?><hr>
+<?php
+}
 }
 ?>
                 <form enctype="multipart/form-data" method="post">
@@ -292,8 +408,8 @@ if($_GET['user'] == $_SESSION['username']) {
                 </form>
 <?php
 if($_POST['send_chat']) {
-$msg_chat=str_replace("\n", "<br>", $_POST['chat']);
-$query_kirim_chat="INSERT INTO pesan(from_user, to_user, pesan) VALUES('$_SESSION[username]', '$_GET[user]', '$msg_chat')";
+$msg_chat=mysqli_real_escape_string($konek, str_replace("\n", "<br>", $_POST['chat']));
+$query_kirim_chat="INSERT INTO pesan(from_user, to_user, pesan) VALUES('$_SESSION[username]', '$get_user', '$msg_chat')";
 if(mysqli_query($konek, $query_kirim_chat)) {
 ?>
                 <br>Msg Sended<br>
@@ -307,10 +423,24 @@ if(mysqli_query($konek, $query_kirim_chat)) {
 ?>
             </div>
 <?php
+} else {
+?>
+<?php
+if($_GET['page'] == "chat") {
+?>
+            <div class="chat">
+                <center>You Need Login For Access</center>
+            </div>
+<?php
+}
+?>
+<?php
+}
 }
 ?>
 <?php
 if($_GET['page'] == "about") {
+$retitle="$judul | About";
 ?>
 <h1>Hacker Forum</h1>
 This A Hacker Forum
@@ -320,12 +450,13 @@ This A Hacker Forum
 <?php
 if($_GET['page'] == "register") {
 if(!$_SESSION['login'] == "logged") {
+$retitle="$judul | Register";
 ?>
 <h1>Register</h1>
 <form enctype="multipart/form-data" method="post">
     Username : <input type="text" name="username">
     <br><br>
-    URL Photo : <input type="text" name="foto">
+    Photo : <input type="file" name="foto"> * JPG Only
     <br><br>
     Email : <input type="email" name="email">
     <br><br>
@@ -336,21 +467,27 @@ if(!$_SESSION['login'] == "logged") {
 <?php
 if($_POST['daftar']) {
 if(!empty($_POST['username']) && !empty($_POST['email']) && !empty($_POST['password'])) {
-$cek_daftar=mysqli_query($konek, "SELECT * FROM pengguna WHERE username='$_POST[username]' OR email='$_POST[email]'");
+$cek_daftar=mysqli_query($konek, "SELECT * FROM pengguna WHERE username='$username' OR email='$email'");
 if(mysqli_num_rows($cek_daftar) > 0 ) {
 ?>
 <br>Sorry Username Or Email Is Already Taken<br>
 <?php
 } else {
-if(empty($_POST['foto'])) {
+if(empty($_FILES['foto'])) {
 $foto_daftar="$site/default.jpg";
 } else {
-$foto_daftar=$_POST['foto'];
+$cek_foto=scandir("img_user");
+if(preg_match("/".md5($_FILES['foto']['name']).".jpg"."/", $cek_foto)) {
+$foto_daftar="img_user/".md5(rand(10000000000, 99999999999).$_FILES['foto']['name']).".jpg";
+copy($_FILES['foto']['tmp_name'], $foto_daftar);
+} else {
+$foto_daftar="img_user/".md5($_FILES['foto']['name']).".jpg";
+copy($_FILES['foto']['tmp_name'], $foto_daftar);
 }
-$username=mysqli_real_escape_string($konek, $_POST['username']);
+}
 $password_daftar=md5($_POST['password']);
 $aktif_kode=rand(1000000000, 9999999999);
-$query_daftar="INSERT INTO pengguna(username, email, password, foto, tgl_daftar, level, total, status) VALUES('$username', '$_POST[email]', '$password_daftar', '$foto_daftar', '$tgl_waktu', 'user', '0', '$aktif_kode')";
+$query_daftar="INSERT INTO pengguna(username, email, password, foto, tgl_daftar, level, total, status) VALUES('$username', '$email', '$password_daftar', '$foto_daftar', '$tgl_waktu', 'user', '0', '$aktif_kode')";
 if(mysqli_query($konek, $query_daftar)) {
 mail($_POST['email'], "$judul, Activation Code", "Hallo, $_POST[username]\nLink For Activation Your Account, $site/?page=activation&user=$username&code=$aktif_kode");
 ?>
@@ -369,9 +506,10 @@ mail($_POST['email'], "$judul, Activation Code", "Hallo, $_POST[username]\nLink 
 ?>
 <?php
 if($_GET['page'] == "disc") {
+$retitle="$judul | Disclaimer";
 ?>
 <h1>Disclaimer</h1>
-We Don't Care
+We Are Not Responsible For Whatever Happens.
 <?php
 }
 ?>
@@ -386,20 +524,22 @@ if(!$_SESSION['login'] == "logged") {
                     <br><br>
 <?php
 if($_POST['login']) {
-$email = mysqli_real_escape_string($konek, $_POST['email']);
 $pass = md5($_POST['passwd']);
 $data = mysqli_query($konek,"SELECT * FROM pengguna WHERE email='$email' AND password='$pass'");
-$cek_status = mysqli_fetch_array(mysqli_query($konek,"SELECT * FROM pengguna WHERE email='$email'"));
+$user_get=mysqli_query($konek,"SELECT * FROM pengguna WHERE email='$email'");
+$g_user = mysqli_fetch_array($user_get);
 $cek = mysqli_num_rows($data);
     if($cek > 0){
         $_SESSION['login'] = "logged";
-        $_SESSION['username'] = $cek_status['username'];
-        if(!$cek_status['status'] == "aktif") {
+        $_SESSION['username'] = $g_user['username'];
+        if(!$g_user == "aktif") {
             $_SESSION['aktif'] = "non";
         }
         header("location:index.php");
+        echo "<script>window.location='$site'</script>";
     }else{
         header("location:index.php?login=true");
+        echo "<script>window.location='$site'</script>";
     }
 }
 ?>
@@ -443,3 +583,10 @@ while($data_topik_baru = mysqli_fetch_assoc($topik_baru_query)) {
 </div>
 </body>
 </html>
+<?php
+if(!empty($retitle)) {
+    $ob_konten = ob_get_contents();
+    ob_end_clean ();
+    echo str_replace("<!-- sub -->", $retitle, $ob_konten);
+}
+?>
