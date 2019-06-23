@@ -2,7 +2,6 @@
 // Simfor ( Simple Forum CMS )
 // Copyright (c)2019 - Afrizal F.A - ICWR-TECH
 
-include("weasty.php");
 $site="http://xbyte.id/";
 $judul="X-Byte Forum";
 $deskripsi="Unreserved Information";
