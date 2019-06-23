@@ -2,14 +2,30 @@
 // Simfor ( Simple Forum CMS )
 // Copyright (c)2019 - Afrizal F.A - ICWR-TECH
 
-$site="http://forum.xbyte.id/";
+include("weasty.php");
+$site="http://xbyte.id/";
 $judul="X-Byte Forum";
 $deskripsi="Unreserved Information";
+$icon="icwr.ico";
 date_default_timezone_set('Asia/Jakarta');
 $tgl_waktu=date("r");
 $konek=mysqli_connect("localhost", "root", "", "forum");
 if(!$konek) {
-    echo "Feature Maintance";
+?>
+<title>Maintenance</title>
+<style>
+    html {
+        background: black;
+        color: white;
+    }
+</style>
+<table height="100%" width="100%">
+    <td align="center">
+        <h1>Feature Maintenance</h1>
+        Copyleft &copy;2019 - ICWR-TECH
+    </td>
+</table>
+<?php
     exit;
 }
 ob_start();
@@ -21,15 +37,15 @@ if($_GET['logout'] == "true") {
 }
 // Filter
 function simfor_string_replace($str) {
-    return str_replace(["<",">","\n"], ["&lt;","&gt;","<br>"], $str);
+    return str_replace(["<",">","\n"," ","\t"], ["&lt;","&gt;","<br>","&nbsp;","&nbsp;&nbsp;&nbsp;"], $str);
 }
 $cat_id=mysqli_real_escape_string($konek, $_GET[cat_id]);
 $filter_user=mysqli_real_escape_string($konek, $_GET[user]);
 $filter_code=mysqli_real_escape_string($konek, $_GET[code]);
 $filter_view=mysqli_real_escape_string($konek, $_GET[view]);
 $get_user=mysqli_real_escape_string($konek, $_GET[user]);
-$username=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['username']));
-$email=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['email']));
+$username=mysqli_real_escape_string($konek, simfor_string_replace($_POST['username']));
+$email=mysqli_real_escape_string($konek, simfor_string_replace($_POST['email']));
 ?>
 <html>
 <!-- Theme & CMS By ICWR-TECH -->
@@ -360,8 +376,8 @@ if($_SESSION['login'] == "logged") {
                 </form>
 <?php
 if($_POST['tambah_topik']) {
-    $detail=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['detail']));
-    $judul_topik=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['judul']));
+    $detail=mysqli_real_escape_string($konek, simfor_string_replace($_POST['detail']));
+    $judul_topik=mysqli_real_escape_string($konek, simfor_string_replace($_POST['judul']));
     if(!empty($_POST['judul']) && !empty($_POST['detail'])) {
         $query_tambah_topic=mysqli_query($konek, "INSERT INTO topik(judul, detail, id_kategori, tgl, username) VALUES('$judul_topik', '$detail', '$cat_id', '$tgl_waktu', '$_SESSION[username]')");
         if($query_tambah_topic) {
@@ -421,8 +437,8 @@ if($gdt['username'] == $_SESSION['username'] ) {
                 </form>
 <?php
 if($_POST['edit_topik']) {
-    $detail=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['detail']));
-    $judul_topik=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['judul']));
+    $detail=mysqli_real_escape_string($konek, simfor_string_replace($_POST['detail']));
+    $judul_topik=mysqli_real_escape_string($konek, simfor_string_replace($_POST['judul']));
     if(!empty($_POST['judul']) && !empty($_POST['detail'])) {
         $query_tambah_topic=mysqli_query($konek, "UPDATE topik SET judul='$judul_topik', detail='$detail', tgl='$tgl_waktu' WHERE id='$_GET[t_id]'");
         if($query_tambah_topic) {
@@ -451,7 +467,7 @@ $get_topik=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM topik WHERE id
 $retitle="$judul | $get_topik[judul]";
 ?>
             <div class="topik">
-                <a href="?page=topic&cat_id=<?php echo $get_topik['id_kategori']; ?>&view=<?php echo $get_topik['id']; ?>"><font size="20"><?php echo $get_topik['judul']; ?></font></a>
+                <a href="?page=topic&cat_id=<?php echo $get_topik['id_kategori']; ?>&view=<?php echo $get_topik['id']; ?>"><font size="20"><?php echo str_replace("&nbsp;", " " , $get_topik['judul']); ?></font></a>
 <?php
 if($get_topik['username'] == $_SESSION['username'] ) {
 ?>
@@ -507,7 +523,7 @@ for ($i_r=1;$i_r<=$pages_paging;$i_r++) {
                 </form>
 <?php
 if($_POST["komentar"]) {
-    $reply_post=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['reply']));
+    $reply_post=mysqli_real_escape_string($konek, simfor_string_replace($_POST['reply']));
     $query_kirim_reply=mysqli_query($konek, "INSERT INTO reply(username, reply, tgl, id_topik) VALUES('$_SESSION[username]', '$reply_post', '$tgl_waktu', '$filter_view')");
     if($query_kirim_reply) {
 ?>
@@ -676,7 +692,7 @@ if($data_direct_chat['to_user'] == $_GET['user'] and $data_direct_chat['from_use
                 </form>
 <?php
 if($_POST['send_chat']) {
-$msg_chat=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['chat']));
+$msg_chat=mysqli_real_escape_string($konek, simfor_string_replace($_POST['chat']));
 $query_kirim_chat="INSERT INTO pesan(from_user, to_user, pesan) VALUES('$_SESSION[username]', '$get_user', '$msg_chat')";
 if(mysqli_query($konek, $query_kirim_chat)) {
 ?>
@@ -836,7 +852,7 @@ $topik_baru_query=mysqli_query($konek, "SELECT * FROM topik ORDER BY id DESC LIM
 while($data_topik_baru = mysqli_fetch_assoc($topik_baru_query)) {
 ?>
                 <tr>
-                    <td class="isi-konten" width="70%"><a href="?page=topic&cat_id=<?php echo $data_topik_baru['id_kategori']; ?>&view=<?php echo $data_topik_baru['id']; ?>"><?php echo $data_topik_baru['judul']; ?></a></td>
+                    <td class="isi-konten" width="70%"><a href="?page=topic&cat_id=<?php echo $data_topik_baru['id_kategori']; ?>&view=<?php echo $data_topik_baru['id']; ?>"><?php echo str_replace("&nbsp;", " ", $data_topik_baru['judul']); ?></a></td>
                 </tr>
 <?php
 }
