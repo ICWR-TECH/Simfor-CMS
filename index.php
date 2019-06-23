@@ -10,13 +10,16 @@ if($_GET['logout'] == "true") {
     exit;
 }
 // Filter
+function simfor_string_replace($str) {
+    return str_replace(["<",">","\n"], ["&lt;","&gt;","<br>"], $str);
+}
 $cat_id=mysqli_real_escape_string($konek, $_GET[cat_id]);
 $filter_user=mysqli_real_escape_string($konek, $_GET[user]);
 $filter_code=mysqli_real_escape_string($konek, $_GET[code]);
 $filter_view=mysqli_real_escape_string($konek, $_GET[view]);
 $get_user=mysqli_real_escape_string($konek, $_GET[user]);
-$username=mysqli_real_escape_string($konek, $_POST['username']);
-$email=mysqli_real_escape_string($konek, $_POST['email']);
+$username=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['username']));
+$email=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['email']));
 ?>
 <html>
 <!-- Theme & CMS By ICWR-TECH -->
@@ -26,8 +29,185 @@ $email=mysqli_real_escape_string($konek, $_POST['email']);
 $retitle="$judul";
 ?>
     <meta name="description" content="Hacking Forum">
+    <link rel="icon" href="<?php echo $icon; ?>">
     <link href="https://fonts.googleapis.com/css?family=News%20Cycle" rel='stylesheet'>
-    <link rel="stylesheet" href="style.css">
+    <style>
+      html {
+        background: black;
+        font-size: 10px;
+      }
+      * {
+        font-family: "News Cycle";
+      }
+      input {
+        background: white;
+        border: 1px solid black;
+        border-radius: 5px;
+        color: black;
+      }
+      .total {
+        margin: 0 auto;
+        width: 90%;
+        overflow:  auto;
+        background: white;
+        color: black;
+      }
+      .judul {
+        background: black;
+        margin: 20px;
+        padding: 20px;
+        color: white;
+        text-align: center;
+      }
+      .font-judul {
+        font-size: 50px;
+      }
+      .font-bawah-judul {
+        font-size: 20px;
+      }
+      .menu {
+        background: black;
+        margin: 20px;
+        padding: 20px;
+        color: white;
+        text-align: center;
+      }
+      .menu a {
+        text-decoration: none;
+        color: black;
+        font-size: 20px;
+      }
+      .menu li{
+        display: inline;
+        background: white;
+        padding: 10px;
+        margin: 10px;
+        color: white;
+      }
+      .tengah {
+        overflow: auto;
+        background: black;
+        margin: 20px;
+        padding: 20px;
+        color: white;
+      }
+      .tengah .judul-konten {
+        background: black;
+        color: white;
+        padding: 10px;
+      }
+      .tengah .isi-konten {
+        background: white;
+        color: black;
+        padding: 10px;
+      }
+      .tengah .isi-konten a {
+        text-decoration: lined;
+        color: black;
+      }
+      .tengah .kiri {
+        float: left;
+        margin: 0 auto;
+        overflow: auto;
+        padding: 20px;
+        background: white;
+        color: black;
+        width: 65%;
+      }
+      .tengah .kiri .chat {
+        margin: 0 auto;
+        overflow: auto;
+        background: black;
+        color: white;
+        padding: 10px;
+      }
+      .tengah .kiri .chat a {
+        text-decoration: lined;
+        color: white;
+      }
+      .tengah .kiri .chatpriv {
+        margin: 0 auto;
+        overflow: auto;
+        background: black;
+        height: 40%;
+        color: white;
+        padding: 10px;
+      }
+      .tengah .kiri .chatpriv a {
+        text-decoration: lined;
+        color: white;
+      }
+      .tengah .kiri .chatpriv .dalam {
+        background: black;
+        color: white;
+        padding: 10px;
+      }
+      .tengah .kiri .tambah-topik {
+        background: black;
+        color: white;
+        padding: 10px;
+        font-size: 15px;
+      }
+      .tengah .kiri .tambah-topik a {
+        text-decoration: lined;
+        color: white;
+      }
+      .tengah .kiri .tambah-topik .detail {
+        width: 100%;
+        height: 20%;
+        background: white;
+        color: black;
+      }
+      .tengah .kiri .topik {
+        font-size: 15px;
+      }
+      .tengah .kiri .topik a {
+        text-decoration: lined;
+        color: black;
+      }
+      .tengah .kiri .komentar {
+        padding: 20px;
+        font-size: 15px;
+        background: black;
+        color: white;
+      }
+      .tengah .kiri .komentar a {
+        text-decoration: lined;
+        color: white;
+      }
+      .tengah .kiri .komentar .foto {
+        height: 30px;
+        width: 30px;
+      }
+      .tengah .kiri .komentar .reply {
+        width: 100%;
+        height: 20%;
+        background: white;
+        color: black;
+      }
+      .tengah .kiri .profil {
+        font-size: 15px;
+      }
+      .tengah .kiri .profil a {
+        text-decoration: lined;
+        color: black;
+      }
+      .tengah .kanan {
+        float: right;
+        margin: 0 auto;
+        overflow: auto;
+        padding: 20px;
+        background: white;
+        color: black;
+        width: 20%;
+      }
+      .copyleft {
+        background: black;
+        margin: 20px;
+        padding: 20px;
+        color: white;
+      }
+    </style>
 </head>
 <body>
 <?php
@@ -106,7 +286,7 @@ while($data_kategori = mysqli_fetch_assoc($query_kategori)) {
 if($_GET['page'] == "topic") {
 $get_kategori=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM kategori WHERE id='$cat_id'"));
 $retitle="$judul | Topic For, $get_kategori[judul]";
-if(!$_GET['view'] && !$_GET['new']) {
+if(!$_GET['view'] && !$_GET['new'] && !$_GET['edit'] && !$_GET['del']) {
 ?>
 <?php
 if($_SESSION['login'] == "logged") {
@@ -170,9 +350,9 @@ if($_SESSION['login'] == "logged") {
                 </form>
 <?php
 if($_POST['tambah_topik']) {
-    $detail=mysqli_real_escape_string($konek, str_replace("\n", "<br>", $_POST['detail']));
-    $judul_topik=mysqli_real_escape_string($konek, $_POST['judul']);
-    if(!empty($_POST['judul']) && !empty($detail)) {
+    $detail=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['detail']));
+    $judul_topik=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['judul']));
+    if(!empty($_POST['judul']) && !empty($_POST['detail'])) {
         $query_tambah_topic=mysqli_query($konek, "INSERT INTO topik(judul, detail, id_kategori, tgl, username) VALUES('$judul_topik', '$detail', '$cat_id', '$tgl_waktu', '$_SESSION[username]')");
         if($query_tambah_topic) {
 ?>
@@ -194,12 +374,82 @@ if($_POST['tambah_topik']) {
 }
 ?>
 <?php
+if($_GET['del'] == "true") {
+if($_SESSION['login'] == "logged") {
+$gdt=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM topik WHERE id='$_GET[t_id]'"));
+if($gdt['username'] == $_SESSION['username'] ) {
+$hapus_topik=mysqli_query($konek, "DELETE FROM topik WHERE id='$_GET[t_id]'");
+if($hapus_topik) {
+?>
+            <div class="tambah-topik">
+                Topic Deleted
+                <script>window.location='?page=topic&cat_id=<?php echo $_GET['cat_id']; ?>'</script>
+            </div>
+<?php
+}
+}
+}
+}
+?>
+<?php
+if($_GET['edit'] == "true") {
+if($_SESSION['login'] == "logged") {
+$gdt=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM topik WHERE id='$_GET[t_id]'"));
+if($gdt['username'] == $_SESSION['username'] ) {
+?>
+            <div class="tambah-topik">
+                <font size="20">Edit Topic</font>
+                <br><br>
+                <form enctype="multipart/form-data" method="post">
+                    Topic : <input type="text" name="judul" value="<?php echo $gdt['judul']; ?>">
+                    <br><br>
+                    Detail :
+                    <br><br>
+                    <textarea class="detail" name="detail"><?php echo str_replace("<br>", "\n", $gdt['detail']); ?></textarea>
+                    <br><br>
+                    <input type="submit" name="edit_topik" value="Edit Topic">
+                </form>
+<?php
+if($_POST['edit_topik']) {
+    $detail=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['detail']));
+    $judul_topik=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['judul']));
+    if(!empty($_POST['judul']) && !empty($_POST['detail'])) {
+        $query_tambah_topic=mysqli_query($konek, "UPDATE topik SET judul='$judul_topik', detail='$detail', tgl='$tgl_waktu' WHERE id='$_GET[t_id]'");
+        if($query_tambah_topic) {
+?>
+                <br>Topic Edited !!<br>
+<?php
+        }
+    }
+}
+?>
+            </div>
+<?php
+}
+} else {
+?>
+            <div class="tambah-topik">
+                <center>You Need Login For Access</center>
+            </div>
+<?php
+}
+}
+?>
+<?php
 if($_GET['view']) {
 $get_topik=mysqli_fetch_assoc(mysqli_query($konek, "SELECT * FROM topik WHERE id='$filter_view'"));
 $retitle="$judul | $get_topik[judul]";
 ?>
             <div class="topik">
                 <a href="?page=topic&cat_id=<?php echo $get_topik['id_kategori']; ?>&view=<?php echo $get_topik['id']; ?>"><font size="20"><?php echo $get_topik['judul']; ?></font></a>
+<?php
+if($get_topik['username'] == $_SESSION['username'] ) {
+?>
+                [ <a href="?page=topic&cat_id=<?php echo $get_topik['id_kategori']; ?>&t_id=<?php echo $get_topik['id']; ?>&edit=true">Edit Topic</a> ]
+                [ <a href="?page=topic&cat_id=<?php echo $get_topik['id_kategori']; ?>&t_id=<?php echo $get_topik['id']; ?>&del=true">Delete Topic</a> ]
+<?php
+}
+?>
                 <hr>
                 Category <a href="?page=topic&cat_id=<?php echo $get_kategori['id']; ?>"><?php echo $get_kategori['judul']; ?></a> By, <a href="?page=profile&user=<?php echo $get_topik['username']; ?>"><?php echo $get_topik['username']; ?></a> ( <?php echo $get_topik['tgl']; ?> )
                 <hr>
@@ -247,7 +497,7 @@ for ($i_r=1;$i_r<=$pages_paging;$i_r++) {
                 </form>
 <?php
 if($_POST["komentar"]) {
-    $reply_post=mysqli_real_escape_string($konek, str_replace("\n", "<br>", $_POST['reply']));
+    $reply_post=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['reply']));
     $query_kirim_reply=mysqli_query($konek, "INSERT INTO reply(username, reply, tgl, id_topik) VALUES('$_SESSION[username]', '$reply_post', '$tgl_waktu', '$filter_view')");
     if($query_kirim_reply) {
 ?>
@@ -329,6 +579,7 @@ $foto_edit="img_user/".md5($_FILES['foto']['name']).".jpg";
 copy($_FILES['foto']['tmp_name'], $foto_edit);
 }
 }
+unlink($get_foto_user['foto']);
 $edit_profile_query=mysqli_query($konek, "UPDATE pengguna SET foto='$foto_edit' WHERE username='$_SESSION[username]'");
 }
 ?>
@@ -383,6 +634,9 @@ $retitle="$judul | Chat From, $_GET[user]";
 ?>
                 <font size="5">Chat From, <?php echo $_GET['user']; ?></font>
                 <hr>
+            </div>
+            <div class="chatpriv">
+                <div class="dalam">
 <?php
 $query_direct_chat=mysqli_query($konek, "SELECT * FROM pesan WHERE to_user='$_SESSION[username]' OR from_user='$_SESSION[username]' ORDER BY id ASC");
 while($data_direct_chat = mysqli_fetch_array($query_direct_chat)) {
@@ -390,25 +644,29 @@ while($data_direct_chat = mysqli_fetch_array($query_direct_chat)) {
 <?php
 if($data_direct_chat['from_user'] == $_GET['user'] and $data_direct_chat['to_user'] == $_SESSION['username']) {
 ?>
-                <a href="?page=profile&user=<?php echo $data_direct_chat['from_user']; ?>"><b><?php echo $data_direct_chat['from_user']; ?></b></a> : <?php echo $data_direct_chat['pesan']; ?><hr>
+                    <a href="?page=profile&user=<?php echo $data_direct_chat['from_user']; ?>"><b><?php echo $data_direct_chat['from_user']; ?></b></a> : <?php echo $data_direct_chat['pesan']; ?><hr>
 <?php
 }
 ?>
 <?php
 if($data_direct_chat['to_user'] == $_GET['user'] and $data_direct_chat['from_user'] == $_SESSION['username']) {
 ?>
-                <a href="?page=profile&user=<?php echo $data_direct_chat['from_user']; ?>"><b><?php echo $data_direct_chat['from_user']; ?></b></a> : <?php echo $data_direct_chat['pesan']; ?><hr>
+                    <a href="?page=profile&user=<?php echo $data_direct_chat['from_user']; ?>"><b><?php echo $data_direct_chat['from_user']; ?></b></a> : <?php echo $data_direct_chat['pesan']; ?><hr>
 <?php
 }
 }
 ?>
+                </div>
+            </div>
+            <br>
+            <div class="chat">
                 <form enctype="multipart/form-data" method="post">
                     <input size="70" type="text" name="chat">
                     <input type="submit" name="send_chat" value="Send">
                 </form>
 <?php
 if($_POST['send_chat']) {
-$msg_chat=mysqli_real_escape_string($konek, str_replace("\n", "<br>", $_POST['chat']));
+$msg_chat=simfor_string_replace(mysqli_real_escape_string($konek, $_POST['chat']));
 $query_kirim_chat="INSERT INTO pesan(from_user, to_user, pesan) VALUES('$_SESSION[username]', '$get_user', '$msg_chat')";
 if(mysqli_query($konek, $query_kirim_chat)) {
 ?>
@@ -489,7 +747,7 @@ $password_daftar=md5($_POST['password']);
 $aktif_kode=rand(1000000000, 9999999999);
 $query_daftar="INSERT INTO pengguna(username, email, password, foto, tgl_daftar, level, total, status) VALUES('$username', '$email', '$password_daftar', '$foto_daftar', '$tgl_waktu', 'user', '0', '$aktif_kode')";
 if(mysqli_query($konek, $query_daftar)) {
-mail($_POST['email'], "$judul, Activation Code", "Hallo, $_POST[username]\nLink For Activation Your Account, $site/?page=activation&user=$username&code=$aktif_kode");
+mail(simfor_string_replace($_POST['email']), "$judul, Activation Code", "Hallo, $_POST[username]\nLink For Activation Your Account, $site/?page=activation&user=$username&code=$aktif_kode");
 ?>
 <br>Register Success, <?php echo $_POST['username']; ?></br>
 <?php
